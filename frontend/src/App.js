@@ -808,6 +808,7 @@ const AdminPanel = () => {
             <button
               onClick={() => {
                 setScheduleForm({ date: '', day_type: 'wednesday', assignments: initializeScheduleAssignments('wednesday') });
+                setEditingSchedule(null);
                 setShowScheduleForm(true);
               }}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
