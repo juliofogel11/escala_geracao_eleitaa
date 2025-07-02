@@ -912,29 +912,34 @@ const AdminPanel = () => {
                               Necessário: {getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s)
                             </span>
                           </div>
-                          <select
-                            multiple
-                            value={assignment.user_ids}
-                            onChange={(e) => {
-                              const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
-                              handleAssignmentChange(index, selectedValues);
-                            }}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            size="6"
-                          >
-                            {users.filter(u => u.role === 'user').map((user) => (
-                              <option key={user.id} value={user.id}>
-                                {user.name}
-                              </option>
-                            ))}
-                          </select>
-                          <div className="mt-2">
-                            <p className="text-xs text-gray-500">
-                              Selecionados: {assignment.user_ids.length}/{getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s)
+                          {/* Interface com Checkboxes - Mais intuitiva */}
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 mb-2">
+                              Selecione as pessoas ({assignment.user_ids.length}/{getRequiredCount(assignment.function_type, scheduleForm.day_type)} selecionadas):
                             </p>
-                            <p className="text-xs text-gray-400">
-                              Ctrl+Click para selecionar múltiplos ou segure Shift para selecionar intervalo
-                            </p>
+                            <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                              {users.filter(u => u.role === 'user').map((user) => (
+                                <label key={user.id} className="flex items-center space-x-2 py-1 hover:bg-gray-100 rounded px-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={assignment.user_ids.includes(user.id)}
+                                    onChange={(e) => {
+                                      let newUserIds = [...assignment.user_ids];
+                                      if (e.target.checked) {
+                                        if (!newUserIds.includes(user.id)) {
+                                          newUserIds.push(user.id);
+                                        }
+                                      } else {
+                                        newUserIds = newUserIds.filter(id => id !== user.id);
+                                      }
+                                      handleAssignmentChange(index, newUserIds);
+                                    }}
+                                    className="rounded text-blue-600 focus:ring-blue-500 focus:ring-2"
+                                  />
+                                  <span className="text-sm text-gray-700">{user.name}</span>
+                                </label>
+                              ))}
+                            </div>
                             {assignment.user_ids.length > getRequiredCount(assignment.function_type, scheduleForm.day_type) && (
                               <p className="text-xs text-red-500 mt-1">
                                 ⚠️ Você selecionou mais pessoas do que o necessário!
