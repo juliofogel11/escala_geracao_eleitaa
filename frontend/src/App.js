@@ -222,6 +222,16 @@ const Dashboard = () => {
     return labels[functionType] || functionType;
   };
 
+  const getRequiredCount = (functionType, dayType) => {
+    if (functionType === 'pregacao' || functionType === 'introdutoria' || functionType === 'portaria') {
+      return 1;
+    }
+    if (functionType === 'limpeza' || functionType === 'louvor') {
+      return 3;
+    }
+    return 1;
+  };
+
   const ScheduleCard = ({ schedule }) => {
     const formatDate = (dateStr) => {
       const date = new Date(dateStr + 'T00:00:00');
