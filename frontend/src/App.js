@@ -466,6 +466,7 @@ const AdminPanel = () => {
 
   // Schedule form states
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [editingSchedule, setEditingSchedule] = useState(null);
   const [scheduleForm, setScheduleForm] = useState({
     date: '',
     day_type: 'wednesday',
