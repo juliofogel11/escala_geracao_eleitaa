@@ -636,13 +636,19 @@ const AdminPanel = () => {
   };
 
   const handleEditSchedule = (schedule) => {
+    console.log('Editando escala:', schedule);
     setEditingSchedule(schedule);
     setScheduleForm({
       date: schedule.date,
       day_type: schedule.day_type,
-      assignments: schedule.assignments
+      assignments: schedule.assignments || []
     });
     setShowScheduleForm(true);
+    console.log('Formulário preenchido:', {
+      date: schedule.date,
+      day_type: schedule.day_type,
+      assignments: schedule.assignments
+    });
   };
 
   const handleDeleteSchedule = async (scheduleId) => {
