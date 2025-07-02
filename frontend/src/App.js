@@ -918,54 +918,56 @@ const AdminPanel = () => {
                         </div>
                       ) : (
                         scheduleForm.assignments.map((assignment, index) => (
-                        <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                          <div className="flex justify-between items-center mb-2">
-                            <h6 className="font-medium text-gray-800">{getFunctionLabel(assignment.function_type)}</h6>
-                            <span className="text-sm text-gray-500">
-                              Necessário: {getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s)
-                            </span>
-                          </div>
-                          {/* Interface com Checkboxes - Mais intuitiva */}
-                          <div>
-                            <p className="text-sm font-medium text-gray-700 mb-2">
-                              Selecione as pessoas ({assignment.user_ids.length}/{getRequiredCount(assignment.function_type, scheduleForm.day_type)} selecionadas):
-                            </p>
-                            <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-white">
-                              {users.filter(u => u.role === 'user').map((user) => (
-                                <label key={user.id} className="flex items-center space-x-2 py-1 hover:bg-gray-100 rounded px-2 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={assignment.user_ids.includes(user.id)}
-                                    onChange={(e) => {
-                                      let newUserIds = [...assignment.user_ids];
-                                      if (e.target.checked) {
-                                        if (!newUserIds.includes(user.id)) {
-                                          newUserIds.push(user.id);
-                                        }
-                                      } else {
-                                        newUserIds = newUserIds.filter(id => id !== user.id);
-                                      }
-                                      handleAssignmentChange(index, newUserIds);
-                                    }}
-                                    className="rounded text-blue-600 focus:ring-blue-500 focus:ring-2"
-                                  />
-                                  <span className="text-sm text-gray-700">{user.name}</span>
-                                </label>
-                              ))}
+                          <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                            <div className="flex justify-between items-center mb-2">
+                              <h6 className="font-medium text-gray-800">{getFunctionLabel(assignment.function_type)}</h6>
+                              <span className="text-sm text-gray-500">
+                                Necessário: {getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s)
+                              </span>
                             </div>
-                            {assignment.user_ids.length > getRequiredCount(assignment.function_type, scheduleForm.day_type) && (
-                              <p className="text-xs text-red-500 mt-1">
-                                ⚠️ Você selecionou mais pessoas do que o necessário!
+                            
+                            {/* Interface com Checkboxes - Mais intuitiva */}
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 mb-2">
+                                Selecione as pessoas ({assignment.user_ids.length}/{getRequiredCount(assignment.function_type, scheduleForm.day_type)} selecionadas):
                               </p>
-                            )}
-                            {assignment.user_ids.length === 0 && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                Nenhuma pessoa selecionada
-                              </p>
-                            )}
+                              <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-white">
+                                {users.filter(u => u.role === 'user').map((user) => (
+                                  <label key={user.id} className="flex items-center space-x-2 py-1 hover:bg-gray-100 rounded px-2 cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={assignment.user_ids.includes(user.id)}
+                                      onChange={(e) => {
+                                        let newUserIds = [...assignment.user_ids];
+                                        if (e.target.checked) {
+                                          if (!newUserIds.includes(user.id)) {
+                                            newUserIds.push(user.id);
+                                          }
+                                        } else {
+                                          newUserIds = newUserIds.filter(id => id !== user.id);
+                                        }
+                                        handleAssignmentChange(index, newUserIds);
+                                      }}
+                                      className="rounded text-blue-600 focus:ring-blue-500 focus:ring-2"
+                                    />
+                                    <span className="text-sm text-gray-700">{user.name}</span>
+                                  </label>
+                                ))}
+                              </div>
+                              {assignment.user_ids.length > getRequiredCount(assignment.function_type, scheduleForm.day_type) && (
+                                <p className="text-xs text-red-500 mt-1">
+                                  ⚠️ Você selecionou mais pessoas do que o necessário!
+                                </p>
+                              )}
+                              {assignment.user_ids.length === 0 && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Nenhuma pessoa selecionada
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
 
