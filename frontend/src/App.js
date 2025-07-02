@@ -821,7 +821,7 @@ const AdminPanel = () => {
           {showScheduleForm && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
               <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 my-8">
-                <h4 className="text-lg font-bold mb-4">Criar Nova Escala</h4>
+                <h4 className="text-lg font-bold mb-4">{editingSchedule ? 'Editar Escala' : 'Criar Nova Escala'}</h4>
                 <form onSubmit={handleCreateSchedule} className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
