@@ -925,9 +925,9 @@ const AdminPanel = () => {
                             <p className="text-sm font-medium text-gray-700 mb-2">
                               Selecione as pessoas ({assignment.user_ids.length}/{getRequiredCount(assignment.function_type, scheduleForm.day_type)} selecionadas):
                             </p>
-                            <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                            <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-white">
                               {users.filter(u => u.role === 'user').map((user) => (
-                                <label key={user.id} className="flex items-center space-x-2 py-1 hover:bg-gray-100 rounded px-2">
+                                <label key={user.id} className="flex items-center space-x-2 py-1 hover:bg-gray-100 rounded px-2 cursor-pointer">
                                   <input
                                     type="checkbox"
                                     checked={assignment.user_ids.includes(user.id)}
@@ -951,6 +951,11 @@ const AdminPanel = () => {
                             {assignment.user_ids.length > getRequiredCount(assignment.function_type, scheduleForm.day_type) && (
                               <p className="text-xs text-red-500 mt-1">
                                 ⚠️ Você selecionou mais pessoas do que o necessário!
+                              </p>
+                            )}
+                            {assignment.user_ids.length === 0 && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Nenhuma pessoa selecionada
                               </p>
                             )}
                           </div>
