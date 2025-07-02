@@ -447,7 +447,504 @@ const Dashboard = () => {
   );
 };
 
-// Main App Component
+// Admin Panel Component
+const AdminPanel = () => {
+  const [activeAdminTab, setActiveAdminTab] = useState('users');
+  const [users, setUsers] = useState([]);
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // User form states
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [userForm, setUserForm] = useState({
+    username: '',
+    name: '',
+    email: '',
+    password: '',
+    role: 'user'
+  });
+
+  // Schedule form states
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [scheduleForm, setScheduleForm] = useState({
+    date: '',
+    day_type: 'wednesday',
+    assignments: []
+  });
+
+  useEffect(() => {
+    fetchUsers();
+    fetchSchedules();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/users`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error);
+    }
+  };
+
+  const fetchSchedules = async () => {
+    try {
+      const response = await axios.get(`${API}/schedules`);
+      setSchedules(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar escalas:', error);
+    }
+  };
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/users`, userForm);
+      alert('Usuário criado com sucesso!');
+      setUserForm({ username: '', name: '', email: '', password: '', role: 'user' });
+      setShowUserForm(false);
+      fetchUsers();
+    } catch (error) {
+      alert('Erro ao criar usuário: ' + (error.response?.data?.detail || 'Erro desconhecido'));
+    }
+    
+    setLoading(false);
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
+      try {
+        await axios.delete(`${API}/users/${userId}`);
+        alert('Usuário excluído com sucesso!');
+        fetchUsers();
+      } catch (error) {
+        alert('Erro ao excluir usuário: ' + (error.response?.data?.detail || 'Erro desconhecido'));
+      }
+    }
+  };
+
+  const initializeScheduleAssignments = (dayType) => {
+    const assignments = [];
+    
+    if (dayType === 'wednesday' || dayType === 'saturday') {
+      assignments.push(
+        { function_type: 'pregacao', user_ids: [], responses: {} },
+        { function_type: 'limpeza', user_ids: [], responses: {} },
+        { function_type: 'louvor', user_ids: [], responses: {} },
+        { function_type: 'introdutoria', user_ids: [], responses: {} }
+      );
+    } else if (dayType === 'friday') {
+      assignments.push(
+        { function_type: 'pregacao', user_ids: [], responses: {} },
+        { function_type: 'portaria', user_ids: [], responses: {} }
+      );
+    }
+    
+    return assignments;
+  };
+
+  const handleDayTypeChange = (dayType) => {
+    setScheduleForm({
+      ...scheduleForm,
+      day_type: dayType,
+      assignments: initializeScheduleAssignments(dayType)
+    });
+  };
+
+  const handleAssignmentChange = (assignmentIndex, userIds) => {
+    const newAssignments = [...scheduleForm.assignments];
+    newAssignments[assignmentIndex].user_ids = userIds;
+    setScheduleForm({ ...scheduleForm, assignments: newAssignments });
+  };
+
+  const handleCreateSchedule = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await axios.post(`${API}/schedules`, scheduleForm);
+      alert('Escala criada com sucesso!');
+      setScheduleForm({ date: '', day_type: 'wednesday', assignments: [] });
+      setShowScheduleForm(false);
+      fetchSchedules();
+    } catch (error) {
+      alert('Erro ao criar escala: ' + (error.response?.data?.detail || 'Erro desconhecido'));
+    }
+    
+    setLoading(false);
+  };
+
+  const handleDeleteSchedule = async (scheduleId) => {
+    if (window.confirm('Tem certeza que deseja excluir esta escala?')) {
+      try {
+        await axios.delete(`${API}/schedules/${scheduleId}`);
+        alert('Escala excluída com sucesso!');
+        fetchSchedules();
+      } catch (error) {
+        alert('Erro ao excluir escala: ' + (error.response?.data?.detail || 'Erro desconhecido'));
+      }
+    }
+  };
+
+  const getDayTypeLabel = (dayType) => {
+    const labels = {
+      'wednesday': 'Quarta-feira',
+      'friday': 'Sexta-feira',
+      'saturday': 'Sábado'
+    };
+    return labels[dayType] || dayType;
+  };
+
+  const getFunctionLabel = (functionType) => {
+    const labels = {
+      'portaria': 'Portaria',
+      'limpeza': 'Limpeza',
+      'pregacao': 'Pregação',
+      'louvor': 'Louvor',
+      'introdutoria': 'Introdutória'
+    };
+    return labels[functionType] || functionType;
+  };
+
+  const getRequiredCount = (functionType, dayType) => {
+    if (functionType === 'pregacao' || functionType === 'introdutoria' || functionType === 'portaria') {
+      return 1;
+    }
+    if (functionType === 'limpeza' || functionType === 'louvor') {
+      return 3;
+    }
+    return 1;
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">Administração</h2>
+      
+      {/* Admin Tabs */}
+      <div className="mb-6">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveAdminTab('users')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeAdminTab === 'users'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Gerenciar Usuários
+            </button>
+            <button
+              onClick={() => setActiveAdminTab('schedules')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeAdminTab === 'schedules'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Gerenciar Escalas
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Users Management */}
+      {activeAdminTab === 'users' && (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-900">Usuários</h3>
+            <button
+              onClick={() => setShowUserForm(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              + Novo Usuário
+            </button>
+          </div>
+
+          {/* User Form Modal */}
+          {showUserForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <h4 className="text-lg font-bold mb-4">Criar Novo Usuário</h4>
+                <form onSubmit={handleCreateUser} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome de Usuário</label>
+                    <input
+                      type="text"
+                      value={userForm.username}
+                      onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                    <input
+                      type="text"
+                      value={userForm.name}
+                      onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      type="email"
+                      value={userForm.email}
+                      onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                    <input
+                      type="password"
+                      value={userForm.password}
+                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                    <select
+                      value={userForm.role}
+                      onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="user">Usuário</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowUserForm(false)}
+                      className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {loading ? 'Criando...' : 'Criar'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Users List */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nome</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuário</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {users.map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.username}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'
+                      }`}>
+                        {user.role === 'admin' ? 'Admin' : 'Usuário'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      {user.username !== 'admin' && (
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Excluir
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Schedules Management */}
+      {activeAdminTab === 'schedules' && (
+        <div>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-semibold text-gray-900">Escalas</h3>
+            <button
+              onClick={() => {
+                setScheduleForm({ date: '', day_type: 'wednesday', assignments: initializeScheduleAssignments('wednesday') });
+                setShowScheduleForm(true);
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              + Nova Escala
+            </button>
+          </div>
+
+          {/* Schedule Form Modal */}
+          {showScheduleForm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+              <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 my-8">
+                <h4 className="text-lg font-bold mb-4">Criar Nova Escala</h4>
+                <form onSubmit={handleCreateSchedule} className="space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                      <input
+                        type="date"
+                        value={scheduleForm.date}
+                        onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Culto</label>
+                      <select
+                        value={scheduleForm.day_type}
+                        onChange={(e) => handleDayTypeChange(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="wednesday">Quarta-feira</option>
+                        <option value="friday">Sexta-feira</option>
+                        <option value="saturday">Sábado</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h5 className="text-md font-medium text-gray-900 mb-3">Atribuições</h5>
+                    <div className="space-y-4">
+                      {scheduleForm.assignments.map((assignment, index) => (
+                        <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                          <div className="flex justify-between items-center mb-2">
+                            <h6 className="font-medium text-gray-800">{getFunctionLabel(assignment.function_type)}</h6>
+                            <span className="text-sm text-gray-500">
+                              Necessário: {getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s)
+                            </span>
+                          </div>
+                          <select
+                            multiple
+                            value={assignment.user_ids}
+                            onChange={(e) => {
+                              const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
+                              const maxCount = getRequiredCount(assignment.function_type, scheduleForm.day_type);
+                              if (selectedValues.length <= maxCount) {
+                                handleAssignmentChange(index, selectedValues);
+                              }
+                            }}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            size="4"
+                          >
+                            {users.filter(u => u.role === 'user').map((user) => (
+                              <option key={user.id} value={user.id}>
+                                {user.name}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Selecione até {getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s). 
+                            Ctrl+Click para selecionar múltiplos.
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowScheduleForm(false)}
+                      className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {loading ? 'Criando...' : 'Criar Escala'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Schedules List */}
+          <div className="space-y-4">
+            {schedules.map((schedule) => (
+              <div key={schedule.id} className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="text-lg font-bold text-gray-900">
+                      {new Date(schedule.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                    </h4>
+                    <p className="text-blue-600 font-medium">{getDayTypeLabel(schedule.day_type)}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteSchedule(schedule.id)}
+                    className="text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Excluir
+                  </button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {schedule.assignments.map((assignment, index) => (
+                    <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                      <h5 className="font-medium text-gray-800 mb-2">{getFunctionLabel(assignment.function_type)}</h5>
+                      <div className="space-y-1">
+                        {assignment.user_ids.map((userId) => {
+                          const user = users.find(u => u.id === userId);
+                          const response = assignment.responses?.[userId];
+                          return (
+                            <div key={userId} className="flex justify-between items-center text-sm">
+                              <span>{user?.name || 'Usuário não encontrado'}</span>
+                              {response && (
+                                <span className={`px-2 py-1 rounded-full text-xs ${
+                                  response.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                  response.status === 'declined' ? 'bg-red-100 text-red-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {response.status === 'accepted' ? 'Confirmado' :
+                                   response.status === 'declined' ? 'Recusou' : 'Pendente'}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 function App() {
   return (
     <AuthProvider>
