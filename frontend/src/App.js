@@ -912,7 +912,12 @@ const AdminPanel = () => {
                   <div>
                     <h5 className="text-md font-medium text-gray-900 mb-3">Atribuições</h5>
                     <div className="space-y-4">
-                      {scheduleForm.assignments.map((assignment, index) => (
+                      {users.filter(u => u.role === 'user').length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">Nenhum usuário disponível. Crie usuários primeiro na aba "Gerenciar Usuários".</p>
+                        </div>
+                      ) : (
+                        scheduleForm.assignments.map((assignment, index) => (
                         <div key={index} className="bg-gray-50 p-4 rounded-lg">
                           <div className="flex justify-between items-center mb-2">
                             <h6 className="font-medium text-gray-800">{getFunctionLabel(assignment.function_type)}</h6>
