@@ -254,6 +254,48 @@ async def create_schedule(schedule_create: ScheduleCreate, admin_user: User = De
     
     return schedule
 
+@api_router.put("/schedules/{schedule_id}", response_model=Schedule)
+async def update_schedule(schedule_id: str, schedule_update: ScheduleCreate, admin_user: User = Depends(get_admin_user)):
+    # Check if schedule exists
+    existing_schedule = await db.schedules.find_one({"id": schedule_id, "active": True})
+    if not existing_schedule:
+        raise HTTPException(status_code=404, detail="Escala não encontrada")
+    
+    # Update schedule
+    update_data = {
+        "date": schedule_update.date,
+        "day_type": schedule_update.day_type,
+        "assignments": [assignment.dict() for assignment in schedule_update.assignments]
+    }
+    
+    result = await db.schedules.update_one(
+        {"id": schedule_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Erro ao atualizar escala")
+    
+    # Get updated schedule
+    updated_schedule = await db.schedules.find_one({"id": schedule_id})
+    
+    # Remove old notifications for this schedule
+    await db.notifications.delete_many({"schedule_id": schedule_id})
+    
+    # Create new notifications for assigned users
+    for assignment in schedule_update.assignments:
+        for user_id in assignment.user_ids:
+            notification = Notification(
+                user_id=user_id,
+                schedule_id=schedule_id,
+                function_type=assignment.function_type,
+                date=schedule_update.date,
+                message=f"Você foi escalado(a) para {assignment.function_type.value} no dia {schedule_update.date} (escala atualizada)"
+            )
+            await db.notifications.insert_one(notification.dict())
+    
+    return Schedule(**updated_schedule)
+
 @api_router.delete("/schedules/{schedule_id}")
 async def delete_schedule(schedule_id: str, admin_user: User = Depends(get_admin_user)):
     result = await db.schedules.update_one(
