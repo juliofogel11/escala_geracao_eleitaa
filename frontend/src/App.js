@@ -915,20 +915,28 @@ const AdminPanel = () => {
           <div className="space-y-4">
             {schedules.map((schedule) => (
               <div key={schedule.id} className="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 className="text-lg font-bold text-gray-900">
-                      {new Date(schedule.date + 'T00:00:00').toLocaleDateString('pt-BR')}
-                    </h4>
-                    <p className="text-blue-600 font-medium">{getDayTypeLabel(schedule.day_type)}</p>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h4 className="text-lg font-bold text-gray-900">
+                        {new Date(schedule.date + 'T00:00:00').toLocaleDateString('pt-BR')}
+                      </h4>
+                      <p className="text-blue-600 font-medium">{getDayTypeLabel(schedule.day_type)}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEditSchedule(schedule)}
+                        className="text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSchedule(schedule.id)}
+                        className="text-red-600 hover:text-red-800 font-medium"
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteSchedule(schedule.id)}
-                    className="text-red-600 hover:text-red-800 font-medium"
-                  >
-                    Excluir
-                  </button>
-                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {schedule.assignments.map((assignment, index) => (
