@@ -607,9 +607,11 @@ const AdminPanel = () => {
   };
 
   const handleAssignmentChange = (assignmentIndex, userIds) => {
+    console.log('Mudando assignment:', assignmentIndex, 'para usuários:', userIds);
     const newAssignments = [...scheduleForm.assignments];
     newAssignments[assignmentIndex].user_ids = userIds;
     setScheduleForm({ ...scheduleForm, assignments: newAssignments });
+    console.log('Novo formulário:', { ...scheduleForm, assignments: newAssignments });
   };
 
   const handleCreateSchedule = async (e) => {
