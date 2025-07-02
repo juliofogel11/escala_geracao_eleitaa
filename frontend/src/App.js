@@ -564,16 +564,32 @@ const AdminPanel = () => {
     setLoading(true);
     
     try {
-      await axios.post(`${API}/schedules`, scheduleForm);
-      alert('Escala criada com sucesso!');
+      if (editingSchedule) {
+        await axios.put(`${API}/schedules/${editingSchedule.id}`, scheduleForm);
+        alert('Escala atualizada com sucesso!');
+      } else {
+        await axios.post(`${API}/schedules`, scheduleForm);
+        alert('Escala criada com sucesso!');
+      }
       setScheduleForm({ date: '', day_type: 'wednesday', assignments: [] });
       setShowScheduleForm(false);
+      setEditingSchedule(null);
       fetchSchedules();
     } catch (error) {
-      alert('Erro ao criar escala: ' + (error.response?.data?.detail || 'Erro desconhecido'));
+      alert('Erro ao salvar escala: ' + (error.response?.data?.detail || 'Erro desconhecido'));
     }
     
     setLoading(false);
+  };
+
+  const handleEditSchedule = (schedule) => {
+    setEditingSchedule(schedule);
+    setScheduleForm({
+      date: schedule.date,
+      day_type: schedule.day_type,
+      assignments: schedule.assignments
+    });
+    setShowScheduleForm(true);
   };
 
   const handleDeleteSchedule = async (scheduleId) => {
