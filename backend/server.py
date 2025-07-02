@@ -359,6 +359,17 @@ async def mark_notification_read(notification_id: str, current_user: User = Depe
 # Include the router in the main app
 app.include_router(api_router)
 
+# Serve React static files
+if os.path.exists("../frontend/build"):
+    app.mount("/static", StaticFiles(directory="../frontend/build/static"), name="static")
+    
+    @app.get("/{path:path}")
+    async def serve_react_app(path: str):
+        file_path = f"../frontend/build/{path}"
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse("../frontend/build/index.html")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
