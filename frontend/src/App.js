@@ -228,6 +228,18 @@ const Dashboard = () => {
       return date.toLocaleDateString('pt-BR');
     };
 
+    // Função para mostrar TODAS as funções, mesmo as que não têm pessoas atribuídas
+    const getAllFunctions = (dayType) => {
+      if (dayType === 'wednesday' || dayType === 'saturday') {
+        return ['pregacao', 'limpeza', 'louvor', 'introdutoria'];
+      } else if (dayType === 'friday') {
+        return ['pregacao', 'portaria'];
+      }
+      return [];
+    };
+
+    const allFunctions = getAllFunctions(schedule.day_type);
+
     return (
       <div className="bg-white rounded-xl shadow-lg p-6 mb-4 border-l-4 border-blue-500">
         <div className="flex justify-between items-start mb-4">
@@ -238,62 +250,93 @@ const Dashboard = () => {
         </div>
 
         <div className="space-y-4">
-          {schedule.assignments.map((assignment, index) => (
-            <div key={index} className="bg-gray-50 rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-semibold text-gray-800">{getFunctionLabel(assignment.function_type)}</h4>
-                <span className="text-sm text-gray-500">{assignment.user_ids.length} pessoa(s)</span>
-              </div>
-              
-              <div className="space-y-2">
-                {assignment.user_ids.map((userId) => {
-                  const assignedUser = users.find(u => u.id === userId);
-                  const response = assignment.responses?.[userId];
-                  const isCurrentUser = userId === user.id;
-                  
-                  return (
-                    <div key={userId} className={`flex justify-between items-center p-2 rounded ${isCurrentUser ? 'bg-blue-50 border border-blue-200' : 'bg-white'}`}>
-                      <span className={`font-medium ${isCurrentUser ? 'text-blue-800' : 'text-gray-700'}`}>
-                        {assignedUser?.name || 'Usuário não encontrado'}
-                        {isCurrentUser && ' (Você)'}
-                      </span>
+          {allFunctions.map((functionType) => {
+            const assignment = schedule.assignments.find(a => a.function_type === functionType);
+            const requiredCount = getRequiredCount(functionType, schedule.day_type);
+            
+            return (
+              <div key={functionType} className="bg-gray-50 rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="font-semibold text-gray-800">{getFunctionLabel(functionType)}</h4>
+                  <span className="text-sm text-gray-500">
+                    {assignment ? assignment.user_ids.length : 0}/{requiredCount} pessoa(s)
+                  </span>
+                </div>
+                
+                <div className="space-y-2">
+                  {assignment && assignment.user_ids.length > 0 ? (
+                    assignment.user_ids.map((userId) => {
+                      const assignedUser = users.find(u => u.id === userId);
+                      const response = assignment.responses?.[userId];
+                      const isCurrentUser = userId === user.id;
                       
-                      {response && (
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          response.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                          response.status === 'declined' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {response.status === 'accepted' ? 'Confirmado' :
-                           response.status === 'declined' ? 'Recusado' : 'Pendente'}
-                        </span>
-                      )}
-                      
-                      {isCurrentUser && !response && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleScheduleResponse(schedule.id, assignment.function_type, 'accepted')}
-                            className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
-                          >
-                            Aceitar
-                          </button>
-                          <button
-                            onClick={() => {
-                              const reason = prompt('Motivo da recusa (opcional):');
-                              handleScheduleResponse(schedule.id, assignment.function_type, 'declined', reason || '');
-                            }}
-                            className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                          >
-                            Recusar
-                          </button>
+                      return (
+                        <div key={userId} className={`flex justify-between items-center p-2 rounded ${isCurrentUser ? 'bg-blue-50 border border-blue-200' : 'bg-white'}`}>
+                          <span className={`font-medium ${isCurrentUser ? 'text-blue-800' : 'text-gray-700'}`}>
+                            {assignedUser?.name || 'Usuário não encontrado'}
+                            {isCurrentUser && ' (Você)'}
+                          </span>
+                          
+                          {response && (
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              response.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                              response.status === 'declined' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {response.status === 'accepted' ? 'Confirmado' :
+                               response.status === 'declined' ? 'Recusado' : 'Pendente'}
+                            </span>
+                          )}
+                          
+                          {isCurrentUser && !response && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleScheduleResponse(schedule.id, assignment.function_type, 'accepted')}
+                                className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                              >
+                                Aceitar
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const reason = prompt('Motivo da recusa (opcional):');
+                                  handleScheduleResponse(schedule.id, assignment.function_type, 'declined', reason || '');
+                                }}
+                                className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                              >
+                                Recusar
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      );
+                    })
+                  ) : (
+                    <div className="p-2 text-center text-gray-500 italic">
+                      Nenhuma pessoa atribuída ainda
                     </div>
-                  );
-                })}
+                  )}
+                  
+                  {/* Mostrar slots vazios se necessário */}
+                  {assignment && assignment.user_ids.length < requiredCount && (
+                    Array.from({ length: requiredCount - assignment.user_ids.length }, (_, index) => (
+                      <div key={`empty-${index}`} className="p-2 text-center text-gray-400 italic border-2 border-dashed border-gray-200 rounded">
+                        Vaga disponível
+                      </div>
+                    ))
+                  )}
+                  
+                  {/* Se não há assignment mas é necessário, mostrar todas as vagas */}
+                  {!assignment && (
+                    Array.from({ length: requiredCount }, (_, index) => (
+                      <div key={`empty-${index}`} className="p-2 text-center text-gray-400 italic border-2 border-dashed border-gray-200 rounded">
+                        Vaga disponível
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     );
