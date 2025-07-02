@@ -917,13 +917,10 @@ const AdminPanel = () => {
                             value={assignment.user_ids}
                             onChange={(e) => {
                               const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
-                              const maxCount = getRequiredCount(assignment.function_type, scheduleForm.day_type);
-                              if (selectedValues.length <= maxCount) {
-                                handleAssignmentChange(index, selectedValues);
-                              }
+                              handleAssignmentChange(index, selectedValues);
                             }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            size="4"
+                            size="6"
                           >
                             {users.filter(u => u.role === 'user').map((user) => (
                               <option key={user.id} value={user.id}>
@@ -931,10 +928,19 @@ const AdminPanel = () => {
                               </option>
                             ))}
                           </select>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Selecione até {getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s). 
-                            Ctrl+Click para selecionar múltiplos.
-                          </p>
+                          <div className="mt-2">
+                            <p className="text-xs text-gray-500">
+                              Selecionados: {assignment.user_ids.length}/{getRequiredCount(assignment.function_type, scheduleForm.day_type)} pessoa(s)
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Ctrl+Click para selecionar múltiplos ou segure Shift para selecionar intervalo
+                            </p>
+                            {assignment.user_ids.length > getRequiredCount(assignment.function_type, scheduleForm.day_type) && (
+                              <p className="text-xs text-red-500 mt-1">
+                                ⚠️ Você selecionou mais pessoas do que o necessário!
+                              </p>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
