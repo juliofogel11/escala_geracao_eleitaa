@@ -441,18 +441,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {activeTab === 'admin' && isAdmin && (
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Administração</h2>
-            <div className="bg-white rounded-lg shadow p-6">
-              <p className="text-gray-600 text-center py-8">
-                Funcionalidades administrativas em desenvolvimento...
-                <br />
-                <span className="text-sm">Gerenciamento de usuários e criação de escalas serão implementados em breve.</span>
-              </p>
-            </div>
-          </div>
-        )}
+        {activeTab === 'admin' && isAdmin && <AdminPanel />}
       </main>
     </div>
   );
