@@ -890,7 +890,10 @@ const AdminPanel = () => {
                   <div className="flex justify-end space-x-3">
                     <button
                       type="button"
-                      onClick={() => setShowScheduleForm(false)}
+                      onClick={() => {
+                        setShowScheduleForm(false);
+                        setEditingSchedule(null);
+                      }}
                       className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       Cancelar
@@ -900,7 +903,7 @@ const AdminPanel = () => {
                       disabled={loading}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                     >
-                      {loading ? 'Criando...' : 'Criar Escala'}
+                      {loading ? 'Salvando...' : (editingSchedule ? 'Atualizar Escala' : 'Criar Escala')}
                     </button>
                   </div>
                 </form>
